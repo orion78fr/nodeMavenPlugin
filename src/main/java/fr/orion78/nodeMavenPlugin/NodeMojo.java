@@ -28,6 +28,10 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Mojo(
     name = "execute",
@@ -112,7 +116,20 @@ public class NodeMojo extends AbstractMojo {
       }
     }
 
-
+    // Execute
+    List<String> command = new ArrayList<>();
+    command.add(new File(extractDir, "bin/node").toString());
+    command.addAll(Arrays.asList(args.split(" "))); // TODO this does not split correctly quoted args
+    try {
+      Process p = new ProcessBuilder(command).start();
+      p.waitFor(10, TimeUnit.SECONDS);
+      int exitVal = p.exitValue();
+      if (exitVal != 0) {
+        throw new MojoExecutionException("Execution returned a non zero exit value : " + exitVal);
+      }
+    } catch (IOException | InterruptedException e) {
+      throw new MojoExecutionException("Error while executing", e);
+    }
   }
 
   @Contract(pure = true)
@@ -124,7 +141,7 @@ public class NodeMojo extends AbstractMojo {
 
   @NotNull
   private File getNodeDownloadFile() {
-    return new File(getNodeExtractDir(), "/node-v" + version + "-linux-x64.tar.xz");
+    return new File(getNodeExtractDir(), "node-v" + version + "-linux-x64.tar.xz");
   }
 
   @NotNull
