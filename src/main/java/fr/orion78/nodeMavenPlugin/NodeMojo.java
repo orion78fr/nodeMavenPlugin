@@ -1,12 +1,8 @@
 package fr.orion78.nodeMavenPlugin;
 
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveException;
-import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.apache.commons.compress.compressors.CompressorException;
-import org.apache.commons.compress.compressors.CompressorInputStream;
-import org.apache.commons.compress.compressors.CompressorStreamFactory;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -18,19 +14,24 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Mojo(
@@ -38,7 +39,7 @@ import java.util.concurrent.TimeUnit;
     defaultPhase = LifecyclePhase.PROCESS_RESOURCES
 )
 public class NodeMojo extends AbstractMojo {
-  @Parameter(defaultValue = "--version")
+  @Parameter(defaultValue = "--help")
   private String args;
   @Parameter(defaultValue = "8.11.2")
   private String version;
@@ -85,11 +86,11 @@ public class NodeMojo extends AbstractMojo {
 
       try (FileInputStream fis = new FileInputStream(downloadedFile);
            BufferedInputStream bis = new BufferedInputStream(fis);
-           CompressorInputStream uncompressed = new CompressorStreamFactory().createCompressorInputStream(bis);
+           XZCompressorInputStream uncompressed = new XZCompressorInputStream(bis);
            BufferedInputStream uncompressedBuffered = new BufferedInputStream(uncompressed);
-           ArchiveInputStream archive = new ArchiveStreamFactory().createArchiveInputStream(uncompressedBuffered)) {
-        ArchiveEntry entry;
-        while ((entry = archive.getNextEntry()) != null) {
+           TarArchiveInputStream archive = new TarArchiveInputStream(uncompressedBuffered)) {
+        TarArchiveEntry entry;
+        while ((entry = archive.getNextTarEntry()) != null) {
           String name = entry.getName();
           if (!archive.canReadEntryData(entry)) {
             throw new IOException("Cannot read data " + name);
@@ -97,10 +98,22 @@ public class NodeMojo extends AbstractMojo {
 
           File f = new File(extractDir, name.substring(name.indexOf('/'))); // Remove first subfolder
           if (entry.isDirectory()) {
+            getLog().debug("Creating directory " + f);
             if (!f.isDirectory() && !f.mkdirs()) {
               throw new IOException("Failed to create directory " + f);
             }
-          } else {
+            Files.setPosixFilePermissions(f.toPath(), modeToPermissionSet(entry.getMode()));
+          } else if (entry.isSymbolicLink()) {
+            getLog().debug("Creating symbolic link " + f + " --> " + entry.getLinkName());
+            File parent = f.getParentFile();
+            if (!parent.isDirectory() && !parent.mkdirs()) {
+              throw new IOException("Failed to create directory " + parent);
+            }
+
+            Files.createSymbolicLink(f.toPath(), new File(entry.getLinkName()).toPath());
+            Thread.sleep(1);
+          } else if (entry.isFile()) {
+            getLog().debug("Extracting file " + f);
             File parent = f.getParentFile();
             if (!parent.isDirectory() && !parent.mkdirs()) {
               throw new IOException("Failed to create directory " + parent);
@@ -109,9 +122,12 @@ public class NodeMojo extends AbstractMojo {
             try (OutputStream o = Files.newOutputStream(f.toPath())) {
               IOUtils.copy(archive, o);
             }
+            Files.setPosixFilePermissions(f.toPath(), modeToPermissionSet(entry.getMode()));
+          } else {
+            throw new IOException("Unsupported entry type " + entry.getName());
           }
         }
-      } catch (CompressorException | ArchiveException | IOException e) {
+      } catch (IOException | InterruptedException e) {
         throw new MojoExecutionException("Error while decompressing", e);
       }
     }
@@ -127,9 +143,51 @@ public class NodeMojo extends AbstractMojo {
       if (exitVal != 0) {
         throw new MojoExecutionException("Execution returned a non zero exit value : " + exitVal);
       }
+
+      getLog().info("Node help");
+      getLog().info("");
+      try (BufferedReader buffer = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+        buffer.lines().forEach(l -> getLog().info(l));
+      }
+      getLog().info("");
     } catch (IOException | InterruptedException e) {
       throw new MojoExecutionException("Error while executing", e);
     }
+  }
+
+  @NotNull
+  private Set<PosixFilePermission> modeToPermissionSet(int mode) {
+    Set<PosixFilePermission> permissions = new HashSet<>();
+
+    if ((mode & 1) != 0) {
+      permissions.add(PosixFilePermission.OTHERS_READ);
+    }
+    if ((mode & (1 << 1)) != 0) {
+      permissions.add(PosixFilePermission.OTHERS_WRITE);
+    }
+    if ((mode & (1 << 2)) != 0) {
+      permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+    }
+    if ((mode & (1 << 3)) != 0) {
+      permissions.add(PosixFilePermission.GROUP_READ);
+    }
+    if ((mode & (1 << 4)) != 0) {
+      permissions.add(PosixFilePermission.GROUP_WRITE);
+    }
+    if ((mode & (1 << 5)) != 0) {
+      permissions.add(PosixFilePermission.GROUP_EXECUTE);
+    }
+    if ((mode & (1 << 6)) != 0) {
+      permissions.add(PosixFilePermission.OWNER_READ);
+    }
+    if ((mode & (1 << 7)) != 0) {
+      permissions.add(PosixFilePermission.OWNER_WRITE);
+    }
+    if ((mode & (1 << 8)) != 0) {
+      permissions.add(PosixFilePermission.OWNER_EXECUTE);
+    }
+
+    return permissions;
   }
 
   @Contract(pure = true)

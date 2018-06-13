@@ -19,6 +19,7 @@
     <java.version>1.8</java.version>
     <maven-plugin-api.version>3.5.3</maven-plugin-api.version>
     <maven-plugin-annotation.version>3.5.2</maven-plugin-annotation.version>
+    <maven-plugin-plugin.version>3.5.2</maven-plugin-plugin.version>
     <maven-project.version>2.2.1</maven-project.version>
 
     <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
@@ -82,6 +83,12 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-plugin-plugin</artifactId>
+        <version>${maven-plugin-plugin.version}</version>
+      </plugin>
+
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${maven-compiler-plugin.version}</version>
