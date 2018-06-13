@@ -47,11 +47,12 @@ public class NodeMojo extends AbstractMojo {
   public void execute() throws MojoExecutionException {
     getLog().info("Node args " + args);
 
-    File downloadedFile = getNodeDownloadFile();
-    if (downloadedFile.exists()) {
-      getLog().info("Node already downloaded to " + downloadedFile);
+    File extractDir = getNodeExtractDir();
+    if (extractDir.exists()) {
+      getLog().info("Node already downloaded to " + extractDir);
     } else {
       // Download node
+      File downloadedFile = getNodeDownloadFile();
       getLog().info("Node version " + version);
       getLog().info("Node url " + getNodeUrl());
       getLog().info("Downloading node to " + downloadedFile);
@@ -75,43 +76,43 @@ public class NodeMojo extends AbstractMojo {
         throw new MojoExecutionException("Problem while downloading node", e);
       }
 
-    }
+      // Extract
+      getLog().info("Extracting " + downloadedFile + " to " + extractDir);
 
-    // Extract
-    File extractDir = getNodeExtractDir();
-    getLog().info("Extracting " + downloadedFile + " to " + extractDir);
-
-
-    try (FileInputStream fis = new FileInputStream(downloadedFile);
-         BufferedInputStream bis = new BufferedInputStream(fis);
-         CompressorInputStream uncompressed = new CompressorStreamFactory().createCompressorInputStream(bis);
-         BufferedInputStream uncompressedBuffered = new BufferedInputStream(uncompressed);
-         ArchiveInputStream archive = new ArchiveStreamFactory().createArchiveInputStream(uncompressedBuffered)) {
-      ArchiveEntry entry;
-      while ((entry = archive.getNextEntry()) != null) {
-        if (!archive.canReadEntryData(entry)) {
-          throw new IOException("Cannot read data " + entry.getName());
-        }
-
-        File f = new File(extractDir, entry.getName());
-        if (entry.isDirectory()) {
-          if (!f.isDirectory() && !f.mkdirs()) {
-            throw new IOException("Failed to create directory " + f);
-          }
-        } else {
-          File parent = f.getParentFile();
-          if (!parent.isDirectory() && !parent.mkdirs()) {
-            throw new IOException("Failed to create directory " + parent);
+      try (FileInputStream fis = new FileInputStream(downloadedFile);
+           BufferedInputStream bis = new BufferedInputStream(fis);
+           CompressorInputStream uncompressed = new CompressorStreamFactory().createCompressorInputStream(bis);
+           BufferedInputStream uncompressedBuffered = new BufferedInputStream(uncompressed);
+           ArchiveInputStream archive = new ArchiveStreamFactory().createArchiveInputStream(uncompressedBuffered)) {
+        ArchiveEntry entry;
+        while ((entry = archive.getNextEntry()) != null) {
+          String name = entry.getName();
+          if (!archive.canReadEntryData(entry)) {
+            throw new IOException("Cannot read data " + name);
           }
 
-          try (OutputStream o = Files.newOutputStream(f.toPath())) {
-            IOUtils.copy(archive, o);
+          File f = new File(extractDir, name.substring(name.indexOf('/'))); // Remove first subfolder
+          if (entry.isDirectory()) {
+            if (!f.isDirectory() && !f.mkdirs()) {
+              throw new IOException("Failed to create directory " + f);
+            }
+          } else {
+            File parent = f.getParentFile();
+            if (!parent.isDirectory() && !parent.mkdirs()) {
+              throw new IOException("Failed to create directory " + parent);
+            }
+
+            try (OutputStream o = Files.newOutputStream(f.toPath())) {
+              IOUtils.copy(archive, o);
+            }
           }
         }
+      } catch (CompressorException | ArchiveException | IOException e) {
+        throw new MojoExecutionException("Error while decompressing", e);
       }
-    } catch (CompressorException | ArchiveException | IOException e) {
-      throw new MojoExecutionException("Error while decompressing", e);
     }
+
+
   }
 
   @Contract(pure = true)
@@ -123,11 +124,11 @@ public class NodeMojo extends AbstractMojo {
 
   @NotNull
   private File getNodeDownloadFile() {
-    return new File(project.getBasedir(), "target/node/node-v" + version + "-linux-x64.tar.xz");
+    return new File(getNodeExtractDir(), "/node-v" + version + "-linux-x64.tar.xz");
   }
 
   @NotNull
   private File getNodeExtractDir() {
-    return new File(project.getBasedir(), "target/node/node-v" + version + "-linux-x64");
+    return new File(project.getBasedir(), "target/node/");
   }
 }
