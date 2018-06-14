@@ -45,6 +45,8 @@ public class NodeMojo extends AbstractMojo {
   private String version;
   @Parameter
   private String nodeURL;
+  @Parameter(property = "nodePlugin.node.install.directory")
+  private String installDir;
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
   private MavenProject project;
@@ -204,6 +206,6 @@ public class NodeMojo extends AbstractMojo {
 
   @NotNull
   private File getNodeExtractDir() {
-    return new File(project.getBasedir(), "target/node/");
+    return installDir != null ? new File(installDir) : new File(project.getBasedir(), "target/node/");
   }
 }
