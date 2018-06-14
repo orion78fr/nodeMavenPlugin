@@ -39,6 +39,8 @@ import java.util.concurrent.TimeUnit;
     defaultPhase = LifecyclePhase.PROCESS_RESOURCES
 )
 public class NodeMojo extends AbstractMojo {
+  @Parameter
+  private String globalScriptToExecute;
   @Parameter(property = "nodePlugin.exec.args", defaultValue = "--help")
   private String args;
   @Parameter(defaultValue = "8.11.2")
@@ -198,9 +200,12 @@ public class NodeMojo extends AbstractMojo {
     // Execute
     try {
       // TODO remove this
-      args = new File(extractDir, "bin/uglifyjs").toString() + " --help";
+      globalScriptToExecute = "uglifyjs";
       List<String> command = new ArrayList<>();
       command.add(nodeExe.toString());
+      if (globalScriptToExecute != null && !globalScriptToExecute.isEmpty()) {
+        command.add(new File(new File(extractDir, "bin"), globalScriptToExecute).toString());
+      }
       command.addAll(Arrays.asList(args.split(" "))); // TODO this does not split correctly quoted args
       Process p = new ProcessBuilder(command).start();
       p.waitFor(10, TimeUnit.SECONDS);
