@@ -56,11 +56,10 @@ public class NodeMojo extends AbstractMojo {
 
     File extractDir = getNodeExtractDir();
     if (extractDir.exists()) {
-      getLog().info("Node already downloaded to " + extractDir);
+      getLog().debug("Node already downloaded to " + extractDir);
     } else {
       // Download node
       File downloadedFile = getNodeDownloadFile();
-      getLog().info("Node version " + version);
       getLog().info("Node url " + getNodeUrl());
       getLog().info("Downloading node to " + downloadedFile);
       URL nodeUrl;
@@ -134,11 +133,39 @@ public class NodeMojo extends AbstractMojo {
       }
     }
 
-    // Execute
-    List<String> command = new ArrayList<>();
-    command.add(new File(extractDir, "bin/node").toString());
-    command.addAll(Arrays.asList(args.split(" "))); // TODO this does not split correctly quoted args
+    // Install check
+    File nodeExe = new File(extractDir, "bin/node");
+    if (!nodeExe.exists() || !nodeExe.isFile()) {
+      throw new MojoExecutionException("Node executable not found : " + nodeExe);
+    }
+    if (!nodeExe.canExecute()) {
+      throw new MojoExecutionException("Cannot execute node executable : " + nodeExe);
+    }
     try {
+      List<String> command = Arrays.asList(nodeExe.toString(), "--version");
+      Process p = new ProcessBuilder(command).start();
+      p.waitFor(10, TimeUnit.SECONDS);
+      int exitVal = p.exitValue();
+      if (exitVal != 0) {
+        throw new MojoExecutionException("Execution returned a non zero exit value : " + exitVal);
+      }
+      try (BufferedReader buffer = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+        String line = buffer.readLine();
+        if (!('v' + version).equals(line)) {
+          throw new MojoExecutionException("Expected version of node is v" + version + " but got " + line);
+        }
+      }
+    } catch (InterruptedException | IOException e) {
+      throw new MojoExecutionException("Error while executing", e);
+    }
+
+    getLog().info("Node version " + version);
+
+    // Execute
+    try {
+      List<String> command = new ArrayList<>();
+      command.add(nodeExe.toString());
+      command.addAll(Arrays.asList(args.split(" "))); // TODO this does not split correctly quoted args
       Process p = new ProcessBuilder(command).start();
       p.waitFor(10, TimeUnit.SECONDS);
       int exitVal = p.exitValue();
