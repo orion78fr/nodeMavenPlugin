@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
     defaultPhase = LifecyclePhase.PROCESS_RESOURCES
 )
 public class NodeMojo extends AbstractMojo {
-  @Parameter(defaultValue = "--help")
+  @Parameter(property = "nodePlugin.exec.args", defaultValue = "--help")
   private String args;
   @Parameter(defaultValue = "8.11.2")
   private String version;
@@ -47,6 +47,8 @@ public class NodeMojo extends AbstractMojo {
   private String nodeURL;
   @Parameter(property = "nodePlugin.node.install.directory")
   private String installDir;
+  @Parameter
+  private String[] dependencies;
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
   private MavenProject project;
@@ -161,8 +163,42 @@ public class NodeMojo extends AbstractMojo {
 
     getLog().info("Node version " + version);
 
+    // Install deps
+    // TODO remove this
+    dependencies = new String[]{"uglify-js@3.4.0"};
+    if (dependencies != null && dependencies.length != 0) {
+      File npmJs = new File(extractDir, "bin/npm");
+      if (!npmJs.exists() || !npmJs.isFile()) {
+        throw new MojoExecutionException("Npm executable not found : " + npmJs);
+      }
+      if (!npmJs.canExecute()) {
+        throw new MojoExecutionException("Cannot execute npm executable : " + npmJs);
+      }
+      try {
+        List<String> command = new ArrayList<>();
+        command.add(nodeExe.toString());
+        command.add(npmJs.toString());
+        command.add("install");
+        command.add("-g");
+        command.addAll(Arrays.asList(dependencies));
+        Process p = new ProcessBuilder(command).start();
+        p.waitFor(10, TimeUnit.SECONDS);
+        try (BufferedReader buffer = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+          buffer.lines().forEach(l -> getLog().info(l));
+        }
+        int exitVal = p.exitValue();
+        if (exitVal != 0) {
+          throw new MojoExecutionException("Execution returned a non zero exit value : " + exitVal);
+        }
+      } catch (InterruptedException | IOException e) {
+        throw new MojoExecutionException("Error while executing", e);
+      }
+    }
+
     // Execute
     try {
+      // TODO remove this
+      args = new File(extractDir, "bin/uglifyjs").toString() + " --help";
       List<String> command = new ArrayList<>();
       command.add(nodeExe.toString());
       command.addAll(Arrays.asList(args.split(" "))); // TODO this does not split correctly quoted args
@@ -189,31 +225,31 @@ public class NodeMojo extends AbstractMojo {
     Set<PosixFilePermission> permissions = new HashSet<>();
 
     if ((mode & 1) != 0) {
-      permissions.add(PosixFilePermission.OTHERS_READ);
+      permissions.add(PosixFilePermission.OTHERS_EXECUTE);
     }
     if ((mode & (1 << 1)) != 0) {
       permissions.add(PosixFilePermission.OTHERS_WRITE);
     }
     if ((mode & (1 << 2)) != 0) {
-      permissions.add(PosixFilePermission.OTHERS_EXECUTE);
+      permissions.add(PosixFilePermission.OTHERS_READ);
     }
     if ((mode & (1 << 3)) != 0) {
-      permissions.add(PosixFilePermission.GROUP_READ);
+      permissions.add(PosixFilePermission.GROUP_EXECUTE);
     }
     if ((mode & (1 << 4)) != 0) {
       permissions.add(PosixFilePermission.GROUP_WRITE);
     }
     if ((mode & (1 << 5)) != 0) {
-      permissions.add(PosixFilePermission.GROUP_EXECUTE);
+      permissions.add(PosixFilePermission.GROUP_READ);
     }
     if ((mode & (1 << 6)) != 0) {
-      permissions.add(PosixFilePermission.OWNER_READ);
+      permissions.add(PosixFilePermission.OWNER_EXECUTE);
     }
     if ((mode & (1 << 7)) != 0) {
       permissions.add(PosixFilePermission.OWNER_WRITE);
     }
     if ((mode & (1 << 8)) != 0) {
-      permissions.add(PosixFilePermission.OWNER_EXECUTE);
+      permissions.add(PosixFilePermission.OWNER_READ);
     }
 
     return permissions;
