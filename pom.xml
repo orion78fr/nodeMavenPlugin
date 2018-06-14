@@ -11,7 +11,6 @@
   <name>Node.js execution maven plugin</name>
   <url>http://maven.apache.org</url>
 
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -32,6 +31,13 @@
     <commons-compress.version>1.17</commons-compress.version>
     <xz.version>1.8</xz.version>
   </properties>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
 
   <dependencies>
     <dependency>
