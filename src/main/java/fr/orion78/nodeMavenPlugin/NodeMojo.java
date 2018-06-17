@@ -26,12 +26,9 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Mojo(
@@ -107,7 +104,7 @@ public class NodeMojo extends AbstractMojo {
             if (!f.isDirectory() && !f.mkdirs()) {
               throw new IOException("Failed to create directory " + f);
             }
-            Files.setPosixFilePermissions(f.toPath(), modeToPermissionSet(entry.getMode()));
+            Files.setPosixFilePermissions(f.toPath(), Utils.modeToPermissionSet(entry.getMode()));
           } else if (entry.isSymbolicLink()) {
             getLog().debug("Creating symbolic link " + f + " --> " + entry.getLinkName());
             File parent = f.getParentFile();
@@ -127,7 +124,7 @@ public class NodeMojo extends AbstractMojo {
             try (OutputStream o = Files.newOutputStream(f.toPath())) {
               IOUtils.copy(archive, o);
             }
-            Files.setPosixFilePermissions(f.toPath(), modeToPermissionSet(entry.getMode()));
+            Files.setPosixFilePermissions(f.toPath(), Utils.modeToPermissionSet(entry.getMode()));
           } else {
             throw new IOException("Unsupported entry type " + entry.getName());
           }
@@ -206,7 +203,7 @@ public class NodeMojo extends AbstractMojo {
       if (globalScriptToExecute != null && !globalScriptToExecute.isEmpty()) {
         command.add(new File(new File(extractDir, "bin"), globalScriptToExecute).toString());
       }
-      command.addAll(Arrays.asList(args.split(" "))); // TODO this does not split correctly quoted args
+      command.addAll(Utils.translateCommandline(args));
       Process p = new ProcessBuilder(command).start();
       p.waitFor(10, TimeUnit.SECONDS);
       int exitVal = p.exitValue();
@@ -223,41 +220,6 @@ public class NodeMojo extends AbstractMojo {
     } catch (IOException | InterruptedException e) {
       throw new MojoExecutionException("Error while executing", e);
     }
-  }
-
-  @NotNull
-  private Set<PosixFilePermission> modeToPermissionSet(int mode) {
-    Set<PosixFilePermission> permissions = new HashSet<>();
-
-    if ((mode & 1) != 0) {
-      permissions.add(PosixFilePermission.OTHERS_EXECUTE);
-    }
-    if ((mode & (1 << 1)) != 0) {
-      permissions.add(PosixFilePermission.OTHERS_WRITE);
-    }
-    if ((mode & (1 << 2)) != 0) {
-      permissions.add(PosixFilePermission.OTHERS_READ);
-    }
-    if ((mode & (1 << 3)) != 0) {
-      permissions.add(PosixFilePermission.GROUP_EXECUTE);
-    }
-    if ((mode & (1 << 4)) != 0) {
-      permissions.add(PosixFilePermission.GROUP_WRITE);
-    }
-    if ((mode & (1 << 5)) != 0) {
-      permissions.add(PosixFilePermission.GROUP_READ);
-    }
-    if ((mode & (1 << 6)) != 0) {
-      permissions.add(PosixFilePermission.OWNER_EXECUTE);
-    }
-    if ((mode & (1 << 7)) != 0) {
-      permissions.add(PosixFilePermission.OWNER_WRITE);
-    }
-    if ((mode & (1 << 8)) != 0) {
-      permissions.add(PosixFilePermission.OWNER_READ);
-    }
-
-    return permissions;
   }
 
   @Contract(pure = true)
