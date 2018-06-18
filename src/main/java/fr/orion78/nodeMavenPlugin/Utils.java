@@ -28,7 +28,7 @@ class Utils {
     // Parse with a simple finite state machine
     int state = NORMAL;
 
-    StringTokenizer tok = new StringTokenizer(toProcess, "\"\' ", true);
+    StringTokenizer tok = new StringTokenizer(toProcess, "\"\' \t\n\r", true);
     List<String> l = new ArrayList<>();
     StringBuilder current = new StringBuilder();
 
@@ -54,7 +54,10 @@ class Utils {
             state = IN_QUOTE;
           } else if ("\"".equals(nextTok)) {
             state = IN_DOUBLE_QUOTE;
-          } else if (" ".equals(nextTok)) {
+          } else if (" ".equals(nextTok)
+              || "\t".equals(nextTok)
+              || "\n".equals(nextTok)
+              || "\r".equals(nextTok)) {
             if (current.length() != 0) {
               l.add(current.toString());
               current.setLength(0);
