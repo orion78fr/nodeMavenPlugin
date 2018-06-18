@@ -1,4 +1,4 @@
-package fr.orion78.nodeMavenPlugin;
+package fr.orion78.nodeMavenPlugin.utils;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
-class UtilsTest {
+class CommandLineUtilsTest {
   @NotNull
   private static Stream<Arguments> standardArgsSource() {
     return Stream.of(
@@ -35,12 +35,12 @@ class UtilsTest {
   @MethodSource("standardArgsSource")
   void testTranslateCommandLine(@NotNull String toProcess,
                                 @NotNull List<String> expected) throws IOException {
-    Assertions.assertEquals(expected, Utils.translateCommandline(toProcess));
+    Assertions.assertEquals(expected, CommandLineUtils.translateCommandline(toProcess));
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"\"", "\"test", "test\"", "'", "'test test2", "\"test'"})
   void testTranslateMalformedArgs(@NotNull String faultyArgs) {
-    Assertions.assertThrows(IOException.class, () -> Utils.translateCommandline(faultyArgs));
+    Assertions.assertThrows(IOException.class, () -> CommandLineUtils.translateCommandline(faultyArgs));
   }
 }

@@ -1,5 +1,7 @@
 package fr.orion78.nodeMavenPlugin;
 
+import fr.orion78.nodeMavenPlugin.utils.CommandLineUtils;
+import fr.orion78.nodeMavenPlugin.utils.PermissionUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
@@ -104,7 +106,7 @@ public class NodeMojo extends AbstractMojo {
             if (!f.isDirectory() && !f.mkdirs()) {
               throw new IOException("Failed to create directory " + f);
             }
-            Files.setPosixFilePermissions(f.toPath(), Utils.modeToPermissionSet(entry.getMode()));
+            Files.setPosixFilePermissions(f.toPath(), PermissionUtils.modeToPermissionSet(entry.getMode()));
           } else if (entry.isSymbolicLink()) {
             getLog().debug("Creating symbolic link " + f + " --> " + entry.getLinkName());
             File parent = f.getParentFile();
@@ -124,7 +126,7 @@ public class NodeMojo extends AbstractMojo {
             try (OutputStream o = Files.newOutputStream(f.toPath())) {
               IOUtils.copy(archive, o);
             }
-            Files.setPosixFilePermissions(f.toPath(), Utils.modeToPermissionSet(entry.getMode()));
+            Files.setPosixFilePermissions(f.toPath(), PermissionUtils.modeToPermissionSet(entry.getMode()));
           } else {
             throw new IOException("Unsupported entry type " + entry.getName());
           }
@@ -203,7 +205,7 @@ public class NodeMojo extends AbstractMojo {
       if (globalScriptToExecute != null && !globalScriptToExecute.isEmpty()) {
         command.add(new File(new File(extractDir, "bin"), globalScriptToExecute).toString());
       }
-      command.addAll(Utils.translateCommandline(args));
+      command.addAll(CommandLineUtils.translateCommandline(args));
       Process p = new ProcessBuilder(command).start();
       p.waitFor(10, TimeUnit.SECONDS);
       int exitVal = p.exitValue();

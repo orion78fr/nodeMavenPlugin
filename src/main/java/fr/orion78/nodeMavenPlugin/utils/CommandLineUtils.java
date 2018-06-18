@@ -1,26 +1,23 @@
-package fr.orion78.nodeMavenPlugin;
+package fr.orion78.nodeMavenPlugin.utils;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.StringTokenizer;
 
-class Utils {
+public class CommandLineUtils {
   private static final int NORMAL = 0;
   private static final int IN_QUOTE = 1;
   private static final int IN_DOUBLE_QUOTE = 2;
 
   /**
-   * From CommandLineUtils.translateCommandline
+   * From CommandLineUtils.translateCommandline of plexus
    */
   @NotNull
-  static List<String> translateCommandline(@NotNull String toProcess) throws IOException {
+  public static List<String> translateCommandline(@NotNull String toProcess) throws IOException {
     if (toProcess.isEmpty()) {
       return Collections.emptyList();
     }
@@ -78,43 +75,5 @@ class Utils {
     }
 
     return l;
-  }
-
-  /**
-   * Transforms unix fs mode (e.g int 0755) to the corresponding set of PosixFilePermission
-   */
-  @NotNull
-  static Set<PosixFilePermission> modeToPermissionSet(int mode) {
-    Set<PosixFilePermission> permissions = new HashSet<>();
-
-    if ((mode & 1) != 0) {
-      permissions.add(PosixFilePermission.OTHERS_EXECUTE);
-    }
-    if ((mode & (1 << 1)) != 0) {
-      permissions.add(PosixFilePermission.OTHERS_WRITE);
-    }
-    if ((mode & (1 << 2)) != 0) {
-      permissions.add(PosixFilePermission.OTHERS_READ);
-    }
-    if ((mode & (1 << 3)) != 0) {
-      permissions.add(PosixFilePermission.GROUP_EXECUTE);
-    }
-    if ((mode & (1 << 4)) != 0) {
-      permissions.add(PosixFilePermission.GROUP_WRITE);
-    }
-    if ((mode & (1 << 5)) != 0) {
-      permissions.add(PosixFilePermission.GROUP_READ);
-    }
-    if ((mode & (1 << 6)) != 0) {
-      permissions.add(PosixFilePermission.OWNER_EXECUTE);
-    }
-    if ((mode & (1 << 7)) != 0) {
-      permissions.add(PosixFilePermission.OWNER_WRITE);
-    }
-    if ((mode & (1 << 8)) != 0) {
-      permissions.add(PosixFilePermission.OWNER_READ);
-    }
-
-    return permissions;
   }
 }
