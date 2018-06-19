@@ -1,5 +1,7 @@
 package fr.orion78.nodeMavenPlugin;
 
+import fr.orion78.nodeMavenPlugin.execution.Execution;
+import fr.orion78.nodeMavenPlugin.execution.Executor;
 import fr.orion78.nodeMavenPlugin.utils.CommandLineUtils;
 import fr.orion78.nodeMavenPlugin.utils.PermissionUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -38,10 +40,6 @@ import java.util.concurrent.TimeUnit;
     defaultPhase = LifecyclePhase.PROCESS_RESOURCES
 )
 public class NodeMojo extends AbstractMojo {
-  @Parameter
-  private String globalScriptToExecute;
-  @Parameter(property = "nodePlugin.exec.args", defaultValue = "--help")
-  private String args;
   @Parameter(defaultValue = "8.11.2")
   private String version;
   @Parameter
@@ -50,13 +48,13 @@ public class NodeMojo extends AbstractMojo {
   private String installDir;
   @Parameter
   private String[] dependencies;
+  @Parameter
+  private Execution[] executions;
 
   @Parameter(defaultValue = "${project}", readonly = true, required = true)
   private MavenProject project;
 
   public void execute() throws MojoExecutionException {
-    getLog().info("Node args " + args);
-
     File extractDir = getNodeExtractDir();
     if (extractDir.exists()) {
       getLog().debug("Node already downloaded to " + extractDir);
@@ -135,6 +133,9 @@ public class NodeMojo extends AbstractMojo {
         throw new MojoExecutionException("Error while decompressing", e);
       }
     }
+
+    Executor executor = new Executor(extractDir);
+
 
     // Install check
     File nodeExe = new File(extractDir, "bin/node");
