@@ -1,13 +1,12 @@
 package fr.orion78.nodeMavenPlugin.execution;
 
 import fr.orion78.nodeMavenPlugin.utils.CommandLineUtils;
-import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.commons.compress.utils.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +28,15 @@ public class Executor {
 
     String executableName = execution.getExecutableName();
     if (!executableName.isEmpty()) {
-      command.add(new File(nodeBinDir, executableName).toString());
+      File executable = new File(nodeBinDir, executableName);
+      if (!executable.exists() || !executable.isFile()) {
+        throw new IOException("Executable not found : " + executable);
+      }
+      if (!executable.canExecute()) {
+        throw new IOException("Command is not executable : " + executable);
+      }
+
+      command.add(executable.toString());
     }
 
     command.addAll(CommandLineUtils.translateCommandline(execution.getArgs()));
@@ -38,11 +45,9 @@ public class Executor {
     p.waitFor(timeoutInSeconds, TimeUnit.SECONDS);
     int exitVal = p.exitValue();
 
-    try (BufferedReader buffer = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-      String line = buffer.readLine();
-      if (!('v' + version).equals(line)) {
-        throw new MojoExecutionException("Expected version of node is v" + version + " but got " + line);
-      }
-    }
+    String out = new String(IOUtils.toByteArray(p.getInputStream()), StandardCharsets.UTF_8);
+    String err = new String(IOUtils.toByteArray(p.getErrorStream()), StandardCharsets.UTF_8);
+
+    return new ExecutionResult(exitVal, out, err);
   }
 }

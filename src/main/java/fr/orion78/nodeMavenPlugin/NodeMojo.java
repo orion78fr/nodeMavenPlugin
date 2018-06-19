@@ -1,8 +1,8 @@
 package fr.orion78.nodeMavenPlugin;
 
 import fr.orion78.nodeMavenPlugin.execution.Execution;
+import fr.orion78.nodeMavenPlugin.execution.ExecutionResult;
 import fr.orion78.nodeMavenPlugin.execution.Executor;
-import fr.orion78.nodeMavenPlugin.utils.CommandLineUtils;
 import fr.orion78.nodeMavenPlugin.utils.PermissionUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -18,22 +18,16 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Mojo(
     name = "execute",
@@ -136,61 +130,32 @@ public class NodeMojo extends AbstractMojo {
 
     Executor executor = new Executor(extractDir);
 
-
-    // Install check
-    File nodeExe = new File(extractDir, "bin/node");
-    if (!nodeExe.exists() || !nodeExe.isFile()) {
-      throw new MojoExecutionException("Node executable not found : " + nodeExe);
-    }
-    if (!nodeExe.canExecute()) {
-      throw new MojoExecutionException("Cannot execute node executable : " + nodeExe);
-    }
     try {
-      List<String> command = Arrays.asList(nodeExe.toString(), "--version");
-      Process p = new ProcessBuilder(command).start();
-      p.waitFor(10, TimeUnit.SECONDS);
-      int exitVal = p.exitValue();
-      if (exitVal != 0) {
-        throw new MojoExecutionException("Execution returned a non zero exit value : " + exitVal);
+      ExecutionResult res = executor.execute(new Execution(null, "--version"), 10);
+      if (res.getExitVal() != 0) {
+        throw new MojoExecutionException("Execution returned a non zero exit value : " + res.getExitVal());
       }
-      try (BufferedReader buffer = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-        String line = buffer.readLine();
-        if (!('v' + version).equals(line)) {
-          throw new MojoExecutionException("Expected version of node is v" + version + " but got " + line);
-        }
+      if (!('v' + version).equals(res.getOut().trim())) {
+        throw new MojoExecutionException("Expected version of node is v" + version + " but got " + res.getOut());
       }
     } catch (InterruptedException | IOException e) {
-      throw new MojoExecutionException("Error while executing", e);
+      throw new MojoExecutionException("Error while checking version", e);
     }
 
     getLog().info("Node version " + version);
+    getLog().info("Installing dependencies");
 
     // Install deps
     // TODO remove this
     dependencies = new String[]{"uglify-js@3.4.0"};
     if (dependencies != null && dependencies.length != 0) {
-      File npmJs = new File(extractDir, "bin/npm");
-      if (!npmJs.exists() || !npmJs.isFile()) {
-        throw new MojoExecutionException("Npm executable not found : " + npmJs);
-      }
-      if (!npmJs.canExecute()) {
-        throw new MojoExecutionException("Cannot execute npm executable : " + npmJs);
-      }
       try {
-        List<String> command = new ArrayList<>();
-        command.add(nodeExe.toString());
-        command.add(npmJs.toString());
-        command.add("install");
-        command.add("-g");
-        command.addAll(Arrays.asList(dependencies));
-        Process p = new ProcessBuilder(command).start();
-        p.waitFor(10, TimeUnit.SECONDS);
-        try (BufferedReader buffer = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-          buffer.lines().forEach(l -> getLog().info(l));
-        }
-        int exitVal = p.exitValue();
-        if (exitVal != 0) {
-          throw new MojoExecutionException("Execution returned a non zero exit value : " + exitVal);
+        ExecutionResult res = executor.execute(new Execution("npm",
+            "install -g " + String.join(" ", dependencies)), 10);
+        getLog().debug(res.getOut());
+        getLog().error(res.getErr());
+        if (res.getExitVal() != 0) {
+          throw new MojoExecutionException("Execution returned a non zero exit value : " + res.getExitVal());
         }
       } catch (InterruptedException | IOException e) {
         throw new MojoExecutionException("Error while executing", e);
@@ -200,26 +165,13 @@ public class NodeMojo extends AbstractMojo {
     // Execute
     try {
       // TODO remove this
-      globalScriptToExecute = "uglifyjs";
-      List<String> command = new ArrayList<>();
-      command.add(nodeExe.toString());
-      if (globalScriptToExecute != null && !globalScriptToExecute.isEmpty()) {
-        command.add(new File(new File(extractDir, "bin"), globalScriptToExecute).toString());
+      executions = new Execution[]{new Execution("uglifyjs", "--help")};
+      for (Execution execution : executions) {
+        getLog().info("Executing " + execution);
+        ExecutionResult res = executor.execute(execution, 10);
+        getLog().info(res.getOut());
+        getLog().error(res.getErr());
       }
-      command.addAll(CommandLineUtils.translateCommandline(args));
-      Process p = new ProcessBuilder(command).start();
-      p.waitFor(10, TimeUnit.SECONDS);
-      int exitVal = p.exitValue();
-      if (exitVal != 0) {
-        throw new MojoExecutionException("Execution returned a non zero exit value : " + exitVal);
-      }
-
-      getLog().info("Node help");
-      getLog().info("");
-      try (BufferedReader buffer = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-        buffer.lines().forEach(l -> getLog().info(l));
-      }
-      getLog().info("");
     } catch (IOException | InterruptedException e) {
       throw new MojoExecutionException("Error while executing", e);
     }

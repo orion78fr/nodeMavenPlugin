@@ -2,6 +2,7 @@ package fr.orion78.nodeMavenPlugin.execution;
 
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class Execution {
   /**
@@ -19,8 +20,8 @@ public class Execution {
   public Execution() {
   }
 
-  public Execution(@NotNull String executableName, @NotNull String args) {
-    this.executableName = executableName;
+  public Execution(@Nullable String executableName, @NotNull String args) {
+    this.executableName = executableName == null ? "" : executableName;
     this.args = args;
   }
 
@@ -32,5 +33,10 @@ public class Execution {
   @NotNull
   public String getArgs() {
     return args;
+  }
+
+  @Override
+  public String toString() {
+    return executableName + " " + args;
   }
 }
