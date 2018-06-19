@@ -55,26 +55,32 @@ public class NodeMojo extends AbstractMojo {
     } else {
       // Download node
       File downloadedFile = getNodeDownloadFile();
-      getLog().info("Node url " + getNodeUrl());
-      getLog().info("Downloading node to " + downloadedFile);
-      URL nodeUrl;
-      try {
-        nodeUrl = new URL(getNodeUrl());
-      } catch (MalformedURLException e) {
-        throw new MojoExecutionException("Problem in node url " + getNodeUrl(), e);
-      }
+      String nodeUrlString = getNodeUrlString();
+      getLog().info("Node url " + nodeUrlString);
 
-      if (!downloadedFile.getParentFile().mkdirs()) {
-        throw new MojoExecutionException("Cannot create folder " + downloadedFile.getParent());
-      }
-
-      try {
-        try (ReadableByteChannel rbc = Channels.newChannel(nodeUrl.openStream());
-             FileOutputStream fos = new FileOutputStream(downloadedFile)) {
-          fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+      if (nodeUrlString.startsWith("file://")) {
+        downloadedFile = new File(nodeUrlString.substring("file://".length()));
+      } else {
+        getLog().info("Downloading node to " + downloadedFile);
+        URL nodeUrl;
+        try {
+          nodeUrl = new URL(nodeUrlString);
+        } catch (MalformedURLException e) {
+          throw new MojoExecutionException("Problem in node url " + nodeUrlString, e);
         }
-      } catch (IOException e) {
-        throw new MojoExecutionException("Problem while downloading node", e);
+
+        if (!downloadedFile.getParentFile().mkdirs()) {
+          throw new MojoExecutionException("Cannot create folder " + downloadedFile.getParent());
+        }
+
+        try {
+          try (ReadableByteChannel rbc = Channels.newChannel(nodeUrl.openStream());
+               FileOutputStream fos = new FileOutputStream(downloadedFile)) {
+            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+          }
+        } catch (IOException e) {
+          throw new MojoExecutionException("Problem while downloading node", e);
+        }
       }
 
       // Extract
@@ -179,7 +185,7 @@ public class NodeMojo extends AbstractMojo {
 
   @Contract(pure = true)
   @NotNull
-  private String getNodeUrl() {
+  private String getNodeUrlString() {
     return nodeURL != null ? nodeURL
         : "https://nodejs.org/dist/v" + version + "/node-v" + version + "-linux-x64.tar.xz";
   }
