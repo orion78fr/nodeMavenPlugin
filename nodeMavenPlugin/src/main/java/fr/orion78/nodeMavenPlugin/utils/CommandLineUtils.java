@@ -1,6 +1,7 @@
 package fr.orion78.nodeMavenPlugin.utils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,8 +18,8 @@ public class CommandLineUtils {
    * From CommandLineUtils.translateCommandline of plexus
    */
   @NotNull
-  public static List<String> translateCommandline(@NotNull String toProcess) throws IOException {
-    if (toProcess.isEmpty()) {
+  public static List<String> translateCommandline(@Nullable String toProcess) throws IOException {
+    if (toProcess == null || toProcess.isEmpty()) {
       return Collections.emptyList();
     }
 

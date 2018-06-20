@@ -1,6 +1,5 @@
 package fr.orion78.nodeMavenPlugin.execution;
 
-import org.apache.maven.plugins.annotations.Parameter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,28 +8,30 @@ public class Execution {
    * Nodejs executable name (e.g. uglifyjs). <br/>
    * Can be empty (then node with be called directly with {@link #args}).
    */
-  @Parameter
   private String executableName;
   /**
-   * Arguments for the command execution. <br/>
+   * Arguments for the command execution.
    */
-  @Parameter(required = true)
   private String args;
 
+  /**
+   * Mandatory empty constructor for maven reactor injection
+   */
+  @SuppressWarnings("unused")
   public Execution() {
   }
 
   public Execution(@Nullable String executableName, @NotNull String args) {
-    this.executableName = executableName == null ? "" : executableName;
+    this.executableName = executableName;
     this.args = args;
   }
 
-  @NotNull
+  @Nullable
   public String getExecutableName() {
     return executableName;
   }
 
-  @NotNull
+  @Nullable
   public String getArgs() {
     return args;
   }

@@ -27,7 +27,7 @@ public class Executor {
     command.add(nodeExe.toString());
 
     String executableName = execution.getExecutableName();
-    if (!executableName.isEmpty()) {
+    if (executableName != null && !executableName.isEmpty()) {
       File executable = new File(nodeBinDir, executableName);
       if (!executable.exists() || !executable.isFile()) {
         throw new IOException("Executable not found : " + executable);

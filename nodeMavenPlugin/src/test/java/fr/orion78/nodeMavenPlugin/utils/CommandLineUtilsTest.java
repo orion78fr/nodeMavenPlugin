@@ -2,6 +2,7 @@ package fr.orion78.nodeMavenPlugin.utils;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -17,6 +18,7 @@ class CommandLineUtilsTest {
   @NotNull
   private static Stream<Arguments> standardArgsSource() {
     return Stream.of(
+        Arguments.of(null, Collections.emptyList()),
         Arguments.of("", Collections.emptyList()),
         Arguments.of("-test", Collections.singletonList("-test")),
         Arguments.of("\"'\"", Collections.singletonList("'")),
@@ -33,7 +35,7 @@ class CommandLineUtilsTest {
 
   @ParameterizedTest
   @MethodSource("standardArgsSource")
-  void testTranslateCommandLine(@NotNull String toProcess,
+  void testTranslateCommandLine(@Nullable String toProcess,
                                 @NotNull List<String> expected) throws IOException {
     Assertions.assertEquals(expected, CommandLineUtils.translateCommandline(toProcess));
   }
