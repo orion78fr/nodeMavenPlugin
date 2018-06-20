@@ -10,6 +10,7 @@ import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -151,20 +152,17 @@ public class NodeMojo extends AbstractMojo {
     }
 
     getLog().info("Node version " + version);
-    getLog().info("Installing dependencies");
 
     // Install deps
     // TODO remove this
     dependencies = new String[]{"uglify-js@3.4.0"};
     if (dependencies != null && dependencies.length != 0) {
       try {
+        getLog().info("Installing dependencies");
         ExecutionResult res = executor.execute(new Execution("npm",
             "install -g " + String.join(" ", dependencies)), 10);
-        getLog().debug(res.getOut());
-        getLog().error(res.getErr());
-        if (res.getExitVal() != 0) {
-          throw new MojoExecutionException("Execution returned a non zero exit value : " + res.getExitVal());
-        }
+
+        logOrFail(res, getLog());
       } catch (InterruptedException | IOException e) {
         throw new MojoExecutionException("Error while executing", e);
       }
@@ -177,11 +175,26 @@ public class NodeMojo extends AbstractMojo {
       for (Execution execution : executions) {
         getLog().info("Executing " + execution);
         ExecutionResult res = executor.execute(execution, 10);
-        getLog().info(res.getOut());
-        getLog().error(res.getErr());
+
+        logOrFail(res, getLog());
       }
     } catch (IOException | InterruptedException e) {
       throw new MojoExecutionException("Error while executing", e);
+    }
+  }
+
+  private void logOrFail(@NotNull ExecutionResult res,
+                         @NotNull Log log) throws MojoExecutionException {
+    if (!res.getOut().trim().isEmpty()) {
+      log.info(res.getOut());
+    }
+    if (!res.getErr().trim().isEmpty()) {
+      if (res.getExitVal() == 0) {
+        log.warn(res.getErr());
+      } else {
+        log.error(res.getErr());
+        throw new MojoExecutionException("Execution returned a non zero exit value : " + res.getExitVal());
+      }
     }
   }
 
