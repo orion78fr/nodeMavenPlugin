@@ -26,19 +26,28 @@
         <groupId>fr.orion78</groupId>
         <artifactId>nodejs-maven-plugin</artifactId>
         <version>${project.version}</version>
-        <configuration>
-          <nodeURL>file:///home/orion/node-v8.11.2-linux-x64.tar.xz</nodeURL>
-          <installDir>/home/orion/.nodeSR</installDir>
-          <dependencies>
-            <dependency>uglify-js@3.4.0</dependency>
-          </dependencies>
-          <executions>
-            <execution>
-              <executableName>uglifyjs</executableName>
-              <args>--help</args>
-            </execution>
-          </executions>
-        </configuration>
+        <executions>
+          <execution>
+            <id>call-uglify-on-resources</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>execute</goal>
+            </goals>
+            <configuration>
+              <nodeURL>file:///home/orion/node-v8.11.2-linux-x64.tar.xz</nodeURL>
+              <installDir>/home/orion/.nodeSR</installDir>
+              <dependencies>
+                <dependency>uglify-js@3.4.0</dependency>
+              </dependencies>
+              <executions>
+                <execution>
+                  <executableName>uglifyjs</executableName>
+                  <args>--help</args>
+                </execution>
+              </executions>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
