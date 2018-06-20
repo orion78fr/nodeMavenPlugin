@@ -42,7 +42,7 @@
               <executions>
                 <execution>
                   <executableName>uglifyjs</executableName>
-                  <args>--help</args>
+                  <args>-o ${project.build.directory}/uglified.js ${basedir}/src/main/resources/js/test.js</args>
                 </execution>
               </executions>
             </configuration>
