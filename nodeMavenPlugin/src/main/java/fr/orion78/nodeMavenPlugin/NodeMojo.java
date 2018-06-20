@@ -56,6 +56,8 @@ public class NodeMojo extends AbstractMojo {
       // Download node
       File downloadedFile = getNodeDownloadFile();
       String nodeUrlString = getNodeUrlString();
+      //TODO remove
+      nodeUrlString = "file:///home/orion/node-v8.11.2-linux-x64.tar.xz";
       getLog().info("Node url " + nodeUrlString);
 
       if (nodeUrlString.startsWith("file://")) {

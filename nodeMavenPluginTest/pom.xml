@@ -10,7 +10,6 @@
   </parent>
 
   <artifactId>nodejs-maven-plugin-test</artifactId>
-  <version>${project.version}</version>
 
   <name>Node.js execution maven plugin test</name>
 
@@ -21,32 +20,26 @@
     </license>
   </licenses>
 
-  <dependencies>
-    <dependency>
-      <groupId>fr.orion78</groupId>
-      <artifactId>nodejs-maven-plugin</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <!-- Junit api -->
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-engine</artifactId>
-      <version>${junit.jupiter.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-params</artifactId>
-      <version>${junit.jupiter.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jetbrains</groupId>
-      <artifactId>annotations</artifactId>
-      <version>${jetbrains.annotations.version}</version>
-      <scope>compile</scope>
-    </dependency>
-  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>fr.orion78</groupId>
+        <artifactId>nodejs-maven-plugin</artifactId>
+        <version>${project.version}</version>
+        <configuration>
+          <nodeURL>file:///home/orion/node-v8.11.2-linux-x64.tar.xz</nodeURL>
+          <installDir>/home/orion/.nodeSR</installDir>
+          <dependencies>
+            <dependency>uglify-js@3.4.0</dependency>
+          </dependencies>
+          <executions>
+            <execution>
+              <executableName>uglifyjs</executableName>
+              <args>--help</args>
+            </execution>
+          </executions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
