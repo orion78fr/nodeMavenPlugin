@@ -57,8 +57,6 @@ public class NodeMojo extends AbstractMojo {
       // Download node
       File downloadedFile = getNodeDownloadFile();
       String nodeUrlString = getNodeUrlString();
-      //TODO remove
-      nodeUrlString = "file:///home/orion/node-v8.11.2-linux-x64.tar.xz";
       getLog().info("Node url " + nodeUrlString);
 
       if (nodeUrlString.startsWith("file://")) {
@@ -154,8 +152,6 @@ public class NodeMojo extends AbstractMojo {
     getLog().info("Node version " + version);
 
     // Install deps
-    // TODO remove this
-    dependencies = new String[]{"uglify-js@3.4.0"};
     if (dependencies != null && dependencies.length != 0) {
       try {
         getLog().info("Installing dependencies");
@@ -170,8 +166,6 @@ public class NodeMojo extends AbstractMojo {
 
     // Execute
     try {
-      // TODO remove this
-      executions = new Execution[]{new Execution("uglifyjs", "--help")};
       for (Execution execution : executions) {
         getLog().info("Executing " + execution);
         ExecutionResult res = executor.execute(execution, 10);
