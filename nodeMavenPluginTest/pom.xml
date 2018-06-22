@@ -47,7 +47,7 @@
                     --source-map "url='./test.js.map'"
                     -c
                     --
-                    ${basedir}/src/main/resources/js/test.js
+                    ${basedir}/src/main/js/test.js
                   </args>
                 </execution>
               </executions>

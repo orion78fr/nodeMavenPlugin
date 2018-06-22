@@ -34,6 +34,7 @@
   <modules>
     <module>nodeMavenPlugin</module>
     <module>nodeMavenPluginTest</module>
+    <module>uglifyjsMavenPlugin</module>
   </modules>
 
   <dependencies>
