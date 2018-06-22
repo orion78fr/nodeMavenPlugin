@@ -34,8 +34,8 @@
               <goal>execute</goal>
             </goals>
             <configuration>
-              <nodeURL>file:///home/orion/node-v8.11.2-linux-x64.tar.xz</nodeURL>
-              <installDir>/home/orion/.nodeSR</installDir>
+              <nodeURL>file://${user.home}/node-v8.11.2-linux-x64.tar.xz</nodeURL>
+              <installDir>${user.home}/.nodeSR</installDir>
               <dependencies>
                 <dependency>uglify-js@3.4.0</dependency>
               </dependencies>
