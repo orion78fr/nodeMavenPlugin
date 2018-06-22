@@ -1,5 +1,6 @@
 package fr.orion78.uglifyjsMavenPlugin;
 
+import fr.orion78.nodeMavenPlugin.NodeMojo;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -37,5 +38,13 @@ public class UglifyMojo extends AbstractMojo {
   @Override
   public void execute() {
     // TODO
+    NodeMojo nodeMojo = new NodeMojo();
+    nodeMojo.setNodeURL(nodeURL);
+    nodeMojo.setVersion(nodeVersion);
+    nodeMojo.setDependencies(new String[]{"uglify-js" + uglifyjsVersion});
+    nodeMojo.setInstallDir(installDir);
+
+    // TODO find files
+    // nodeMojo.setExecutions();
   }
 }

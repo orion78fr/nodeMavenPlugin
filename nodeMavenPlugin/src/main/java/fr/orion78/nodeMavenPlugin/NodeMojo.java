@@ -14,7 +14,6 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -46,8 +45,8 @@ public class NodeMojo extends AbstractMojo {
   @Parameter
   private Execution[] executions;
 
-  @Parameter(defaultValue = "${project}", readonly = true, required = true)
-  private MavenProject project;
+  @Parameter(defaultValue = "${project.build.directory}")
+  private String projectBuildDir;
 
   public void execute() throws MojoExecutionException {
     File extractDir = getNodeExtractDir();
@@ -206,6 +205,30 @@ public class NodeMojo extends AbstractMojo {
 
   @NotNull
   private File getNodeExtractDir() {
-    return installDir != null ? new File(installDir) : new File(project.getBasedir(), "target/node/");
+    return installDir != null ? new File(installDir) : new File(projectBuildDir, "node/");
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
+  }
+
+  public void setNodeURL(String nodeURL) {
+    this.nodeURL = nodeURL;
+  }
+
+  public void setInstallDir(String installDir) {
+    this.installDir = installDir;
+  }
+
+  public void setDependencies(String[] dependencies) {
+    this.dependencies = dependencies;
+  }
+
+  public void setExecutions(Execution[] executions) {
+    this.executions = executions;
+  }
+
+  public void setProjectBuildDir(String projectBuildDir) {
+    this.projectBuildDir = projectBuildDir;
   }
 }
