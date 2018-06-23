@@ -1,0 +1,58 @@
+version: '{branch}-{build}'
+image: Ubuntu
+install:
+- &2063251921 sh: >-
+    sudo apt-get install maven
+
+    mvn -version
+cache: /home/appveyor/.m2
+build_script:
+- sh: >-
+    mkdir nodeMavenPluginTest/target
+
+    mvn package --batch-mode -DskipTest
+test_script:
+- sh: mvn test --batch-mode
+notifications:
+- provider: Webhook
+  url: https://canary.discordapp.com/api/webhooks/459820554245898271/hQCVJ1KEDreNPDiY9kIxSTaWQ72zi8d36onFavsH6iZ0iofObsDm8T2dIMv7WjMq9bPO
+  method: POST
+  body: >-
+    {
+      "embeds": [
+        {
+          "title": "Build {{buildId}}",
+          "url": "{{buildUrl}}",
+          "color": {{#passed}}40973{{/passed}}{{^passed}}11672839{{/passed}},
+          "footer": {
+            "icon_url": "{{#passed}}https://i.imgur.com/Rf4g8v6.png{{/passed}}{{^passed}}https://i.imgur.com/QaERwAW.png{{/passed}}",
+            "text": "{{#passed}}Success{{/passed}}{{^passed}}Failure{{/passed}}"
+          },
+          "author": {
+            "name": "{{commitAuthor}}",
+            "url": "https://github.com/{{repositoryName}}/commit/{{commitId}}"
+          },
+          "fields": [
+            {
+              "name": "Commit",
+              "value": "[{{commitMessage}}](https://github.com/{{repositoryName}}/commit/{{commitId}})"
+            },
+            {
+              "name": "Duration",
+              "value": "{{duration}}",
+              "inline": true
+            },
+            {
+              "name": "Build version",
+              "value": "{{buildVersion}}",
+              "inline": true
+            }
+          ]
+        }
+      ]
+    }
+  on_build_success: &791552802 true
+  on_build_failure: true
+  on_build_status_changed: false
+on_finish:
+- sh: "for fileName in $(find . -name \"TEST-*.xml\"); do \n  testName=$(echo $fileName | rev | cut -d \"-\" -f 1 | cut -d \".\" -f 2- | rev)\n  echo Uplading $testName test result\n  curl -F upload=@$fileName \"https://ci.appveyor.com/api/testresults/junit/$APPVEYOR_JOB_ID\"\ndone"
