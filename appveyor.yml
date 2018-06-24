@@ -10,7 +10,7 @@ build_script:
 - sh: >-
     mkdir nodeMavenPluginTest/target
 
-    mvn package --batch-mode -DskipTest
+    mvn package --batch-mode -DskipTests
 test_script:
 - sh: mvn test --batch-mode -Dmaven.test.failure.ignore=true
 notifications:
