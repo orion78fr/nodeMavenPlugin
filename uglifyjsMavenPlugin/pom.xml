@@ -6,7 +6,7 @@
   <parent>
     <artifactId>nodejs-maven-plugin-parent-pom</artifactId>
     <groupId>fr.orion78</groupId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
   </parent>
 
   <artifactId>uglifyjs-maven-plugin</artifactId>
