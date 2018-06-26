@@ -14,7 +14,6 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedInputStream;
@@ -34,9 +33,9 @@ import java.nio.file.Files;
     defaultPhase = LifecyclePhase.PROCESS_RESOURCES
 )
 public class NodeMojo extends AbstractMojo {
-  @Parameter(defaultValue = "8.11.2")
+  @Parameter(property = "nodePlugin.node.version", defaultValue = "8.11.2")
   private String version;
-  @Parameter
+  @Parameter(property = "nodePlugin.node.download.url")
   private String nodeURL;
   @Parameter(property = "nodePlugin.node.install.directory")
   private String installDir;
@@ -45,21 +44,25 @@ public class NodeMojo extends AbstractMojo {
   @Parameter
   private Execution[] executions;
 
-  @Parameter(defaultValue = "${project.build.directory}")
+  @Parameter(defaultValue = "${project.build.directory}", readonly = true)
   private String projectBuildDir;
 
   public void execute() throws MojoExecutionException {
-    File extractDir = getNodeExtractDir();
+    NodePaths paths = NodePaths.of(nodeURL, installDir, version, projectBuildDir);
+
+    File extractDir = paths.getNodeInstallDir();
     if (extractDir.exists()) {
       getLog().debug("Node already downloaded to " + extractDir);
     } else {
       // Download node
-      File downloadedFile = getNodeDownloadFile();
-      String nodeUrlString = getNodeUrlString();
+      File downloadedFile = paths.getNodeDownloadFile();
+      String nodeUrlString = paths.getNodeURLString();
       getLog().info("Node url " + nodeUrlString);
 
+      File localizedFile;
       if (nodeUrlString.startsWith("file://")) {
-        downloadedFile = new File(nodeUrlString.substring("file://".length()));
+        // File is already local
+        localizedFile = new File(nodeUrlString.substring("file://".length()));
       } else {
         getLog().info("Downloading node to " + downloadedFile);
         URL nodeUrl;
@@ -81,12 +84,14 @@ public class NodeMojo extends AbstractMojo {
         } catch (IOException e) {
           throw new MojoExecutionException("Problem while downloading node", e);
         }
+
+        localizedFile = downloadedFile;
       }
 
       // Extract
-      getLog().info("Extracting " + downloadedFile + " to " + extractDir);
+      getLog().info("Extracting " + localizedFile + " to " + extractDir);
 
-      try (FileInputStream fis = new FileInputStream(downloadedFile);
+      try (FileInputStream fis = new FileInputStream(localizedFile);
            BufferedInputStream bis = new BufferedInputStream(fis);
            XZCompressorInputStream uncompressed = new XZCompressorInputStream(bis);
            BufferedInputStream uncompressedBuffered = new BufferedInputStream(uncompressed);
@@ -189,23 +194,6 @@ public class NodeMojo extends AbstractMojo {
         throw new MojoExecutionException("Execution returned a non zero exit value : " + res.getExitVal());
       }
     }
-  }
-
-  @Contract(pure = true)
-  @NotNull
-  private String getNodeUrlString() {
-    return nodeURL != null ? nodeURL
-        : "https://nodejs.org/dist/v" + version + "/node-v" + version + "-linux-x64.tar.xz";
-  }
-
-  @NotNull
-  private File getNodeDownloadFile() {
-    return new File(getNodeExtractDir(), "node-v" + version + "-linux-x64.tar.xz");
-  }
-
-  @NotNull
-  private File getNodeExtractDir() {
-    return installDir != null ? new File(installDir) : new File(projectBuildDir, "node/");
   }
 
   public void setVersion(String version) {
