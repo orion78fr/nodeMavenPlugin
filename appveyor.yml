@@ -15,7 +15,7 @@ build_script:
 
     mvn package --batch-mode -DskipTests
 test_script:
-- sh: mvn test --batch-mode -Dmaven.test.failure.ignore=true
+- sh: mvn test --batch-mode -Dmaven.test.failure.ignore=true -P jacoco
 notifications:
 - provider: Webhook
   url: https://canary.discordapp.com/api/webhooks/459820554245898271/hQCVJ1KEDreNPDiY9kIxSTaWQ72zi8d36onFavsH6iZ0iofObsDm8T2dIMv7WjMq9bPO
