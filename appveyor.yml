@@ -6,6 +6,7 @@ install:
 
     mvn -version
 cache: /home/appveyor/.m2
+stack: jdk 1.8
 environment:
   COVERALLS_REPO_TOKEN:
     secure: eGiVwV1giFLhk87RZGeEpYcG5oirRBfvjifyYlQEqShtTVCzyHg/8NK4TxcrK6na
