@@ -3,6 +3,7 @@ package fr.orion78.nodeMavenPlugin;
 import fr.orion78.nodeMavenPlugin.execution.Execution;
 import fr.orion78.nodeMavenPlugin.execution.ExecutionResult;
 import fr.orion78.nodeMavenPlugin.execution.Executor;
+import fr.orion78.nodeMavenPlugin.utils.NetUtils;
 import fr.orion78.nodeMavenPlugin.utils.PermissionUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -65,22 +66,9 @@ public class NodeMojo extends AbstractMojo {
         localizedFile = new File(nodeUrlString.substring("file://".length()));
       } else {
         getLog().info("Downloading node to " + downloadedFile);
-        URL nodeUrl;
-        try {
-          nodeUrl = new URL(nodeUrlString);
-        } catch (MalformedURLException e) {
-          throw new MojoExecutionException("Problem in node url " + nodeUrlString, e);
-        }
-
-        if (!downloadedFile.getParentFile().mkdirs()) {
-          throw new MojoExecutionException("Cannot create folder " + downloadedFile.getParent());
-        }
 
         try {
-          try (ReadableByteChannel rbc = Channels.newChannel(nodeUrl.openStream());
-               FileOutputStream fos = new FileOutputStream(downloadedFile)) {
-            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-          }
+          NetUtils.localize(nodeUrlString, downloadedFile);
         } catch (IOException e) {
           throw new MojoExecutionException("Problem while downloading node", e);
         }
@@ -196,27 +184,27 @@ public class NodeMojo extends AbstractMojo {
     }
   }
 
-  public void setVersion(String version) {
+  public void setVersion(@NotNull String version) {
     this.version = version;
   }
 
-  public void setNodeURL(String nodeURL) {
+  public void setNodeURL(@NotNull String nodeURL) {
     this.nodeURL = nodeURL;
   }
 
-  public void setInstallDir(String installDir) {
+  public void setInstallDir(@NotNull String installDir) {
     this.installDir = installDir;
   }
 
-  public void setDependencies(String[] dependencies) {
+  public void setDependencies(@NotNull String[] dependencies) {
     this.dependencies = dependencies;
   }
 
-  public void setExecutions(Execution[] executions) {
+  public void setExecutions(@NotNull Execution[] executions) {
     this.executions = executions;
   }
 
-  public void setProjectBuildDir(String projectBuildDir) {
+  public void setProjectBuildDir(@NotNull String projectBuildDir) {
     this.projectBuildDir = projectBuildDir;
   }
 }
