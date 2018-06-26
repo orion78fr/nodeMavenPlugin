@@ -6,6 +6,9 @@ install:
 
     mvn -version
 cache: /home/appveyor/.m2
+environment:
+  COVERALLS_REPO_TOKEN:
+    secure: eGiVwV1giFLhk87RZGeEpYcG5oirRBfvjifyYlQEqShtTVCzyHg/8NK4TxcrK6na
 build_script:
 - sh: >-
     mkdir nodeMavenPluginTest/target
