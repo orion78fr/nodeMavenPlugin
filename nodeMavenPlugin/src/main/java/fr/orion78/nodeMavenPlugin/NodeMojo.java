@@ -3,12 +3,8 @@ package fr.orion78.nodeMavenPlugin;
 import fr.orion78.nodeMavenPlugin.execution.Execution;
 import fr.orion78.nodeMavenPlugin.execution.ExecutionResult;
 import fr.orion78.nodeMavenPlugin.execution.Executor;
+import fr.orion78.nodeMavenPlugin.utils.ArchiveUtils;
 import fr.orion78.nodeMavenPlugin.utils.NetUtils;
-import fr.orion78.nodeMavenPlugin.utils.PermissionUtils;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
-import org.apache.commons.compress.utils.IOUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -17,17 +13,8 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.file.Files;
 
 @Mojo(
     name = "execute",
@@ -79,51 +66,10 @@ public class NodeMojo extends AbstractMojo {
       // Extract
       getLog().info("Extracting " + localizedFile + " to " + extractDir);
 
-      try (FileInputStream fis = new FileInputStream(localizedFile);
-           BufferedInputStream bis = new BufferedInputStream(fis);
-           XZCompressorInputStream uncompressed = new XZCompressorInputStream(bis);
-           BufferedInputStream uncompressedBuffered = new BufferedInputStream(uncompressed);
-           TarArchiveInputStream archive = new TarArchiveInputStream(uncompressedBuffered)) {
-        TarArchiveEntry entry;
-        while ((entry = archive.getNextTarEntry()) != null) {
-          String name = entry.getName();
-          if (!archive.canReadEntryData(entry)) {
-            throw new IOException("Cannot read data " + name);
-          }
-
-          File f = new File(extractDir, name.substring(name.indexOf('/'))); // Remove first subfolder
-          if (entry.isDirectory()) {
-            getLog().debug("Creating directory " + f);
-            if (!f.isDirectory() && !f.mkdirs()) {
-              throw new IOException("Failed to create directory " + f);
-            }
-            Files.setPosixFilePermissions(f.toPath(), PermissionUtils.modeToPermissionSet(entry.getMode()));
-          } else if (entry.isSymbolicLink()) {
-            getLog().debug("Creating symbolic link " + f + " --> " + entry.getLinkName());
-            File parent = f.getParentFile();
-            if (!parent.isDirectory() && !parent.mkdirs()) {
-              throw new IOException("Failed to create directory " + parent);
-            }
-
-            Files.createSymbolicLink(f.toPath(), new File(entry.getLinkName()).toPath());
-            Thread.sleep(1);
-          } else if (entry.isFile()) {
-            getLog().debug("Extracting file " + f);
-            File parent = f.getParentFile();
-            if (!parent.isDirectory() && !parent.mkdirs()) {
-              throw new IOException("Failed to create directory " + parent);
-            }
-
-            try (OutputStream o = Files.newOutputStream(f.toPath())) {
-              IOUtils.copy(archive, o);
-            }
-            Files.setPosixFilePermissions(f.toPath(), PermissionUtils.modeToPermissionSet(entry.getMode()));
-          } else {
-            throw new IOException("Unsupported entry type " + entry.getName());
-          }
-        }
-      } catch (IOException | InterruptedException e) {
-        throw new MojoExecutionException("Error while decompressing", e);
+      try {
+        ArchiveUtils.extractTar(localizedFile, extractDir, 1, getLog());
+      } catch (IOException e) {
+        throw new MojoExecutionException("Error during extract", e);
       }
     }
 
