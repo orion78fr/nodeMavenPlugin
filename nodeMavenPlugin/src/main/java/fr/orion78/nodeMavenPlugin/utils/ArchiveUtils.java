@@ -43,24 +43,18 @@ public class ArchiveUtils {
         File f = new File(folder, finalName);
         if (entry.isDirectory()) {
           log.debug("Creating directory " + f);
-          if (!f.isDirectory() && !f.mkdirs()) {
-            throw new IOException("Failed to create directory " + f);
-          }
+          createDir(f);
           Files.setPosixFilePermissions(f.toPath(), PermissionUtils.modeToPermissionSet(entry.getMode()));
         } else if (entry.isSymbolicLink()) {
           log.debug("Creating symbolic link " + f + " --> " + entry.getLinkName());
           File parent = f.getParentFile();
-          if (!parent.isDirectory() && !parent.mkdirs()) {
-            throw new IOException("Failed to create directory " + parent);
-          }
+          createDir(parent);
 
           Files.createSymbolicLink(f.toPath(), new File(entry.getLinkName()).toPath());
         } else if (entry.isFile()) {
           log.debug("Extracting file " + f);
           File parent = f.getParentFile();
-          if (!parent.isDirectory() && !parent.mkdirs()) {
-            throw new IOException("Failed to create directory " + parent);
-          }
+          createDir(parent);
 
           try (OutputStream o = Files.newOutputStream(f.toPath())) {
             IOUtils.copy(archive, o);
@@ -70,6 +64,12 @@ public class ArchiveUtils {
           throw new IOException("Unsupported entry type " + entry.getName());
         }
       }
+    }
+  }
+
+  private static void createDir(@NotNull File dir) throws IOException {
+    if (!dir.isDirectory() && !dir.mkdirs()) {
+      throw new IOException("Failed to create directory " + dir);
     }
   }
 }
