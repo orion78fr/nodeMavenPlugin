@@ -13,6 +13,7 @@ environment:
 build_script:
 - sh: >-
     mvn clean
+
     mkdir nodeMavenPluginTest/target
 test_script:
 - sh: mvn install --batch-mode -Dmaven.test.failure.ignore=true -P jacoco
