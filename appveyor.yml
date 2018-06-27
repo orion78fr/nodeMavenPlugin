@@ -19,7 +19,8 @@ test_script:
 - sh: mvn install --batch-mode -Dmaven.test.failure.ignore=true -P jacoco
 notifications:
 - provider: Webhook
-  url: https://canary.discordapp.com/api/webhooks/459820554245898271/hQCVJ1KEDreNPDiY9kIxSTaWQ72zi8d36onFavsH6iZ0iofObsDm8T2dIMv7WjMq9bPO
+  url:
+    secure: PNJ76pGdkEt/09/qRctvtl/ACv1v3CLdtek2ztjSZYOeV4698e2Cc+NGkq+if6eU+VlnDNK6wVbVXq0biEpZMYx2gvMYx5V6w4PMxQYpuJ93Cc2+NrsN17EGKxY94Wwiao2Mp5sx6DuHg2ayjLVKgdbeSElrEec1zHiu2ZBuYMtYTCrDdbys4nC97YzqoXDV
   method: POST
   body: >-
     {
