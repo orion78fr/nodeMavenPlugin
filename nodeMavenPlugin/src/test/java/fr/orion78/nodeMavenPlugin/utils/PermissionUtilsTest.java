@@ -20,11 +20,13 @@ import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
 
 class PermissionUtilsTest {
   @NotNull
+  @SuppressWarnings("OctalInteger") // These are unix permissions, usually expressed as octal
   private static Stream<Arguments> permissionSource() {
     return Stream.of(
         Arguments.of(0740, Stream.of(OWNER_READ, OWNER_WRITE, OWNER_EXECUTE, GROUP_READ).collect(Collectors.toSet())),
         Arguments.of(0400, Collections.singleton(OWNER_READ)),
-        Arguments.of(0004, Collections.singleton(OTHERS_READ))
+        Arguments.of(0004, Collections.singleton(OTHERS_READ)),
+        Arguments.of(0777, Stream.of(PosixFilePermission.values()).collect(Collectors.toSet()))
     );
   }
 
