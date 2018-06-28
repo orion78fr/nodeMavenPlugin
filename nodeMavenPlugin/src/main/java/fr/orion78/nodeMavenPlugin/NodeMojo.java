@@ -21,7 +21,8 @@ import java.io.IOException;
     defaultPhase = LifecyclePhase.PROCESS_RESOURCES
 )
 public class NodeMojo extends AbstractMojo {
-  @Parameter(property = "nodePlugin.node.version", defaultValue = "8.11.2")
+  // https://nodejs.org/en/
+  @Parameter(property = "nodePlugin.node.version", defaultValue = "8.11.3")
   private String version;
   @Parameter(property = "nodePlugin.node.download.url")
   private String nodeURL;

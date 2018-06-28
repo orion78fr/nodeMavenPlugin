@@ -37,7 +37,8 @@
               <!--nodeURL>file://${user.home}/node-v8.11.2-linux-x64.tar.xz</nodeURL-->
               <installDir>${user.home}/.nodeMvnPlugin</installDir>
               <dependencies>
-                <dependency>uglify-js@3.4.0</dependency>
+                <!-- https://www.npmjs.com/package/uglify-js -->
+                <dependency>uglify-js@3.4.2</dependency>
               </dependencies>
               <executions>
                 <execution>

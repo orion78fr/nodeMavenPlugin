@@ -23,7 +23,7 @@ public class NetUtils {
   }
 
   public static void localize(@NotNull URL url, @NotNull File file) throws IOException {
-    if (!file.getParentFile().mkdirs()) {
+    if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) {
       throw new IOException("Cannot create folder " + file.getParent());
     }
 
