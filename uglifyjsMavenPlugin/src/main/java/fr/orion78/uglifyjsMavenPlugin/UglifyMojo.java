@@ -1,10 +1,16 @@
 package fr.orion78.uglifyjsMavenPlugin;
 
 import fr.orion78.nodeMavenPlugin.NodeMojo;
+import fr.orion78.nodeMavenPlugin.execution.Execution;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 @Mojo(
     name = "execute",
@@ -14,20 +20,20 @@ public class UglifyMojo extends AbstractMojo {
   /*
    * Node versions
    */
-  @Parameter
+  @Parameter(property = "uglifyPlugin.node.version", defaultValue = "8.11.2")
   private String nodeVersion;
-  @Parameter
-  private String uglifyjsVersion;
-  @Parameter
+  @Parameter(property = "uglifyPlugin.node.download.url")
   private String nodeURL;
-  @Parameter
+  @Parameter(property = "uglifyPlugin.node.install.directory")
   private String installDir;
+  @Parameter(property = "uglifyPlugin.uglify.version", defaultValue = "3.4.0")
+  private String uglifyjsVersion;
 
   /*
    * File lookup
    */
-  @Parameter
-  private String repository;
+  @Parameter(defaultValue = "src/main/js")
+  private String sourcesFolder;
   @Parameter
   private String[] includes;
   @Parameter
@@ -35,16 +41,33 @@ public class UglifyMojo extends AbstractMojo {
   @Parameter
   private boolean excludesFirst;
 
-  @Override
-  public void execute() {
-    // TODO
-    NodeMojo nodeMojo = new NodeMojo();
-    nodeMojo.setNodeURL(nodeURL);
-    nodeMojo.setVersion(nodeVersion);
-    nodeMojo.setDependencies(new String[]{"uglify-js" + uglifyjsVersion});
-    nodeMojo.setInstallDir(installDir);
+  /*
+   * Uglify args (taken from uglify command-line args)
+   */
+  @Parameter
+  private UglifyArgs uglifyArgs;
 
-    // TODO find files
-    // nodeMojo.setExecutions();
+  @Override
+  public void execute() throws MojoExecutionException {
+    NodeMojo nodeMojo = new NodeMojo();
+    nodeMojo.setVersion(nodeVersion);
+    nodeMojo.setNodeURL(nodeURL);
+    nodeMojo.setInstallDir(installDir);
+    nodeMojo.setDependencies(new String[]{"uglify-js@" + uglifyjsVersion});
+
+    List<File> files;
+    try {
+      files = FilesUtils.crawlDir(sourcesFolder, includes, excludes, excludesFirst);
+    } catch (IOException e) {
+      throw new MojoExecutionException("Error while crawling the directory " + sourcesFolder);
+    }
+    Execution[] executions = new Execution[files.size()];
+
+    for (int i = 0; i < files.size(); i++) {
+      executions[i] = new Execution("uglifyjs", uglifyArgs.createArgsForFile(files.get(i)));
+    }
+    nodeMojo.setExecutions(executions);
+
+    nodeMojo.execute();
   }
 }
