@@ -20,6 +20,15 @@
     </license>
   </licenses>
 
+  <dependencies>
+    <dependency>
+      <groupId>fr.orion78</groupId>
+      <artifactId>nodejs-maven-plugin</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>
