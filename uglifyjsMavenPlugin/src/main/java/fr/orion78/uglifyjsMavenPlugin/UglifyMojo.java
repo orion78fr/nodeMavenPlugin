@@ -38,8 +38,6 @@ public class UglifyMojo extends AbstractMojo {
   private String[] includes;
   @Parameter
   private String[] excludes;
-  @Parameter
-  private boolean excludesFirst;
 
   /*
    * Uglify args (taken from uglify command-line args)
@@ -57,7 +55,7 @@ public class UglifyMojo extends AbstractMojo {
 
     List<File> files;
     try {
-      files = FilesUtils.crawlDir(sourcesFolder, includes, excludes, excludesFirst);
+      files = FilesUtils.crawlDir(sourcesFolder, includes, excludes);
     } catch (IOException e) {
       throw new MojoExecutionException("Error while crawling the directory " + sourcesFolder);
     }
