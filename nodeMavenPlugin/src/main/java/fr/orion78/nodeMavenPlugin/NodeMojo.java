@@ -41,7 +41,9 @@ public class NodeMojo extends AbstractMojo {
 
     File extractDir = paths.getNodeInstallDir();
     if (extractDir.exists()) {
-      getLog().debug("Node already downloaded to " + extractDir);
+      if (getLog().isDebugEnabled()) {
+        getLog().debug("Node already downloaded to " + extractDir);
+      }
     } else {
       // Download node
       File downloadedFile = paths.getNodeDownloadFile();
