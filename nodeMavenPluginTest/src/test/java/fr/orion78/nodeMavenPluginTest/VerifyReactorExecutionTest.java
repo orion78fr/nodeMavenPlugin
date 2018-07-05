@@ -1,4 +1,4 @@
-package fr.orion78.nodejsMavenPluginTest;
+package fr.orion78.nodeMavenPluginTest;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

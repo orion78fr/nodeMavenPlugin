@@ -1,6 +1,5 @@
-package fr.orion78.nodejsMavenPluginTest;
+package fr.orion78.nodeMavenPlugin;
 
-import fr.orion78.nodeMavenPlugin.NodeMojo;
 import fr.orion78.nodeMavenPlugin.execution.Execution;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.junit.jupiter.api.Assertions;
@@ -8,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 
-class MojoExecutionFromCodeTest {
+class MojoExecutionFromCodeIT {
   @Test
   void testCallUglifyFromCode() throws MojoExecutionException {
     NodeMojo mojo = new NodeMojo();
@@ -19,7 +18,7 @@ class MojoExecutionFromCodeTest {
         new Execution("uglifyjs",
             "-o target/testFromCode.js" +
                 " --source-map \"url='./testFromCode.js.map'\"" +
-                " -c -- src/main/js/test.js")});
+                " -c -- src/test/resources/js/test.js")});
 
     mojo.execute();
 
