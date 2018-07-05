@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 
-class MojoExecutionFromCodeIT {
+class NodeMojoExecutionFromCodeIT {
   @Test
-  void testCallUglifyFromCode() throws MojoExecutionException {
+  void testCallFromCode() throws MojoExecutionException {
     NodeMojo mojo = new NodeMojo();
     mojo.setVersion("8.11.3");
     mojo.setInstallDir(System.getProperty("user.home") + "/.nodeMvnPlugin");
