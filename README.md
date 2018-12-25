@@ -9,6 +9,6 @@
 [![GitHub issues](https://img.shields.io/github/issues/orion78fr/nodeMavenPlugin.svg?logo=github)](https://github.com/orion78fr/nodeMavenPlugin/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/orion78fr/nodeMavenPlugin.svg?logo=github)](https://github.com/orion78fr/nodeMavenPlugin/pulls)
 
-This plugin allows execution of node.js scripts as a Maven Mojo.
+This plugin allowed execution of node.js scripts as a Maven Mojo.
 
-This is in early stage.
+This was a WIP I don't plan to continue.
